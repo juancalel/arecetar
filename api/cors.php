@@ -44,3 +44,4 @@ if (!$produccion) {
     header("Access-Control-Allow-Credentials: true");
     header("Access-Control-Allow-Methods: OPTIONS,GET,PUT,POST,DELETE");
 }
+
