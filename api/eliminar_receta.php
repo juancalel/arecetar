@@ -34,5 +34,24 @@ Hacer una donación vía PayPal: https://paypal.me/LuisCabreraBenito
 */ ?>
 <?php
 include_once "cors.php";
-$idReceta = json_decode(file_get_contents("php://input"));
-echo json_encode(Parzibyte\Recetas::eliminar($idReceta));
+
+try {
+  // Retrieve recipe ID from JSON input
+  $idReceta = json_decode(file_get_contents("php://input"), true);
+  if (!$idReceta) {
+    throw new Exception("Invalid JSON data: " . json_last_error_msg());
+  }
+
+  // Validate recipe ID
+  if (!is_numeric($idReceta)) {
+    throw new Exception("Recipe ID must be a number.");
+  }
+
+  // Call Recetas::eliminar() to delete recipe
+  $respuesta = Parzibyte\Recetas::eliminar($idReceta);
+} catch (Exception $e) {
+  $error = $e->getMessage();
+  $respuesta = ["error" => $error];
+}
+
+echo json_encode($respuesta);

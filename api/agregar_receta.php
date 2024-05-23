@@ -34,7 +34,53 @@ Hacer una donación vía PayPal: https://paypal.me/LuisCabreraBenito
 */ ?>
 <?php
 include_once "cors.php";
-$receta = json_decode($_POST["receta"]);
-$foto = $_FILES["foto"];
-$respuesta = Parzibyte\Recetas::agregar($receta->nombre, $receta->descripcion, $receta->porciones, $receta->ingredientes, $receta->pasos, $foto);
+
+try {
+  // Decode JSON data
+  $receta = json_decode($_POST["receta"], true);
+  if (!$receta) {
+    throw new Exception("Invalid JSON data: " . json_last_error_msg());
+  }
+
+  // Validate recipe data
+  if (empty($receta["nombre"])) {
+    throw new Exception("Recipe name cannot be empty.");
+  }
+  if (empty($receta["descripcion"])) {
+    throw new Exception("Recipe description cannot be empty.");
+  }
+  if (!is_numeric($receta["porciones"])) {
+    throw new Exception("Recipe servings must be a number.");
+  }
+  if (!isset($receta["ingredientes"]) || !is_array($receta["ingredientes"])) {
+    throw new Exception("Recipe ingredients must be an array.");
+  }
+  if (!isset($receta["pasos"]) || !is_array($receta["pasos"])) {
+    throw new Exception("Recipe steps must be an array.");
+  }
+
+  // Handle photo upload
+  $foto = null;
+  if (isset($_FILES["foto"])) {
+    $foto = $_FILES["foto"];
+    if ($foto["error"] !== UPLOAD_ERR_OK) {
+      throw new Exception("Photo upload error: " . $foto["error"]);
+    }
+  }
+
+  // Add recipe
+  $respuesta = Parzibyte\Recetas::agregar(
+    $receta["nombre"],
+    $receta["descripcion"],
+    $receta["porciones"],
+    $receta["ingredientes"],
+    $receta["pasos"],
+    $foto
+  );
+} catch (Exception $e) {
+  $error = $e->getMessage();
+  $respuesta = ["error" => $error];
+}
+
 echo json_encode($respuesta);
+

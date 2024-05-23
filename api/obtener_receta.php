@@ -34,5 +34,28 @@ Hacer una donación vía PayPal: https://paypal.me/LuisCabreraBenito
 */ ?>
 <?php
 include_once "cors.php";
-echo json_encode(Parzibyte\Recetas::obtenerPorId($_GET["id"]));
 
+try {
+  // Retrieve recipe ID from URL query
+  $idReceta = $_GET["id"];
+
+  // Validate recipe ID
+  if (!is_numeric($idReceta)) {
+    throw new Exception("Recipe ID debe ser numerico.");
+  }
+
+  // Call Recetas::obtenerPorId() to get recipe
+  $receta = Parzibyte\Recetas::obtenerPorId($idReceta);
+
+  // Check if recipe was found
+  if (!$receta) {
+    $respuesta = ["error" => "Receta no encontrada."];
+  } else {
+    $respuesta = ["receta" => $receta];
+  }
+} catch (Exception $e) {
+  $error = $e->getMessage();
+  $respuesta = ["error" => $error];
+}
+
+echo json_encode($respuesta);

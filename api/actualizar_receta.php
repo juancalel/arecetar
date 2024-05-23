@@ -33,11 +33,38 @@ Hacer una donación vía PayPal: https://paypal.me/LuisCabreraBenito
 ------------------------------------------------------------------------------------------------
 */ ?>
 <?php
+
 include_once "cors.php";
-$receta = json_decode($_POST["receta"]);
-$foto = null;
-if (isset($_FILES["foto"])) {
-	$foto = $_FILES["foto"];
+
+try {
+  // Decode JSON data
+  $receta = json_decode($_POST["receta"], true);
+  if (!$receta) {
+    throw new Exception("Invalid JSON data: " . json_last_error_msg());
+  }
+
+  // Handle photo upload
+  $foto = null;
+  if (isset($_FILES["foto"])) {
+    $foto = $_FILES["foto"];
+    if ($foto["error"] !== UPLOAD_ERR_OK) {
+      throw new Exception("Photo upload error: " . $foto["error"]);
+    }
+  }
+
+  // Update recipe
+  $respuesta = Parzibyte\Recetas::actualizar(
+    $receta["nombre"],
+    $receta["descripcion"],
+    $receta["porciones"],
+    $receta["ingredientes"],
+    $receta["pasos"],
+    $foto,
+    $receta["id"]
+  );
+} catch (Exception $e) {
+  $error = $e->getMessage();
+  $respuesta = ["error" => $error];
 }
-$respuesta = Parzibyte\Recetas::actualizar($receta->nombre, $receta->descripcion, $receta->porciones, $receta->ingredientes, $receta->pasos, $foto,$receta->id);
+
 echo json_encode($respuesta);
