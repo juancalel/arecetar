@@ -20,9 +20,9 @@ try {
 
     // Verificar si se encontraron resultados
     if (empty($resultados)) {
-        $respuesta = ["resultados" => [], "mensaje" => "No se encontraron resultados."];
+        $respuesta = [];
     } else {
-        $respuesta = ["resultados" => $resultados];
+        $respuesta = $resultados;
     }
 } catch (Exception $e) {
     $respuesta = ["error" => $e->getMessage()];

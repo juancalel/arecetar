@@ -7,9 +7,9 @@ export default {
   props: ["receta"],
   methods: {
     fotoDeReceta() {
-      // if (!this.receta.foto) {
-      //   return false;
-      // }
+      if (!this.receta.foto) {
+        return false;
+      }
       return RecetasService.ubicacionFoto(this.receta.foto);
     },
   },
