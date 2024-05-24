@@ -1,43 +1,9 @@
 <?php
-/*
-
-  ____          _____               _ _           _       
- |  _ \        |  __ \             (_) |         | |      
- | |_) |_   _  | |__) |_ _ _ __ _____| |__  _   _| |_ ___ 
- |  _ <| | | | |  ___/ _` | '__|_  / | '_ \| | | | __/ _ \
- | |_) | |_| | | |  | (_| | |   / /| | |_) | |_| | ||  __/
- |____/ \__, | |_|   \__,_|_|  /___|_|_.__/ \__, |\__\___|
-         __/ |                               __/ |        
-        |___/                               |___/         
-    
-____________________________________
-/ Si necesitas ayuda, contáctame en \
-\ https://parzibyte.me               /
- ------------------------------------
-        \   ^__^
-         \  (oo)\_______
-            (__)\       )\/\
-                ||----w |
-                ||     ||
-Creado por Parzibyte (https://parzibyte.me).
-------------------------------------------------------------------------------------------------
-            | IMPORTANTE |
-Si vas a borrar este encabezado, considera:
-Seguirme: https://parzibyte.me/blog/sigueme/
-Y compartir mi blog con tus amigos
-También tengo canal de YouTube: https://www.youtube.com/channel/UCroP4BTWjfM0CkGB6AFUoBg?sub_confirmation=1
-Twitter: https://twitter.com/parzibyte
-Facebook: https://facebook.com/parzibyte.fanpage
-Instagram: https://instagram.com/parzibyte
-Hacer una donación vía PayPal: https://paypal.me/LuisCabreraBenito
-------------------------------------------------------------------------------------------------
-*/ ?>
-<?php
 
 namespace Parzibyte;
 
-use Parzibyte\BD;
-
+use PDOException;
+use Exception;
 
 class Recetas
 {
@@ -45,10 +11,12 @@ class Recetas
     {
         $bd = BD::obtener();
         try {
-            $sentencia = $bd->prepare("SELECT recetas.id, recetas.nombre, recetas.descripcion, recetas.porciones, fotos_recetas.foto 
-                                       FROM recetas 
-                                       INNER JOIN fotos_recetas ON recetas.id = fotos_recetas.id_receta 
-                                       WHERE recetas.nombre LIKE ? OR recetas.descripcion LIKE ?");
+            $sentencia = $bd->prepare(
+                "SELECT recetas.id, recetas.nombre, recetas.descripcion, recetas.porciones, fotos_recetas.foto 
+                 FROM recetas 
+                 INNER JOIN fotos_recetas ON recetas.id = fotos_recetas.id_receta 
+                 WHERE recetas.nombre LIKE ? OR recetas.descripcion LIKE ?"
+            );
             $sentencia->execute(["%$busqueda%", "%$busqueda%"]);
             return $sentencia->fetchAll();
         } catch (PDOException $e) {
@@ -89,8 +57,6 @@ class Recetas
         }
     }
 
-
-
     public static function eliminar($id)
     {
         try {
@@ -116,50 +82,36 @@ class Recetas
     }
 
     public static function agregar($nombre, $descripcion, $porciones, $ingredientes, $pasos, $foto)
-{
-    $bd = BD::obtener();
-    try {
-        // Iniciar la transacción
-        
-        // $bd->beginTransaction();
-
-        // Insertar la receta y obtener el ID
-        $sentencia = $bd->prepare("INSERT INTO recetas(nombre, porciones, descripcion) VALUES (?, ?, ?) RETURNING id");
-        $resultado = $sentencia->execute([$nombre, $porciones, $descripcion]);
-        if (!$resultado) {
-            throw new Exception("Error al insertar receta en la base de datos");
+    {
+        $bd = BD::obtener();
+        try {
+                
+            // Insertar la receta y obtener el ID
+            $sentencia = $bd->prepare("INSERT INTO recetas(nombre, porciones, descripcion) VALUES (?, ?, ?) RETURNING id");
+            $sentencia->execute([$nombre, $porciones, $descripcion]);
+            $idReceta = $sentencia->fetchColumn();
+            
+            $idNuevo = $idReceta;
+            // Verificar que el ID de la receta sea válido
+            if (!$idReceta) {
+                throw new Exception("No se pudo obtener el ID de la receta");
+            }
+            
+            // Guardar los pasos e ingredientes
+            self::guardarIngredientes($ingredientes, $idNuevo);
+            self::guardarPasos($pasos, $idNuevo);
+    
+            // Guardar la foto si se proporciona
+            if ($foto) {
+                FotosRecetas::guardarFoto($foto, $idNuevo);
+            }
+    
+            return true;
+        } catch (PDOException $e) {
+            throw new Exception("Error al agregar receta: " . $e->getMessage(), $e->getCode());
         }
-        $idReceta = $sentencia->fetchColumn();
-
-        // Verificar que el ID de la receta sea válido
-        if (!$idReceta) {
-            throw new Exception("No se pudo obtener el ID de la receta");
-        }
-
-        // Guardar los pasos e ingredientes
-        self::guardarIngredientes($ingredientes, $idReceta);
-        self::guardarPasos($pasos, $idReceta);
-        
-
-        // Guardar la foto si se proporciona
-        if ($foto) {
-            FotosRecetas::guardarFoto($foto, $idReceta);
-        }
-
-        // Confirmar la transacción
-        
-        // $bd->commit();
-
-        return true;
-    } catch (PDOException $e) {
-        // Revertir la transacción en caso de error
-        
-        // $bd->rollBack();
-        
-        throw new Exception("Error al agregar receta: " . $e->getMessage(), $e->getCode());
     }
-}
-
+    
 
     private static function guardarPasos($pasos, $idReceta)
     {
@@ -187,39 +139,28 @@ class Recetas
         try {
             $sentencia = $bd->prepare("INSERT INTO ingredientes_recetas(id_receta, nombre, cantidad, unidad_medida) VALUES (?, ?, ?, ?)");
             foreach ($ingredientes as $ingrediente) {
-                $sentencia->execute([$idReceta, $ingrediente['nombre'], $ingrediente['cantidad'], $ingrediente['unidadMedida']]);
+                $sentencia->execute([$idReceta, $ingrediente['nombre'], $ingrediente['cantidad'], $ingrediente['unidadmedida']]);
             }
         } catch (PDOException $e) {
             throw new Exception("Error al guardar ingredientes: " . $e->getMessage(), $e->getCode());
         }
     }
 
-    public static function ingredientesDeReceta($idReceta)
-    {
-        $bd = BD::obtener();
-        try {
-            $sentencia = $bd->prepare("SELECT nombre, cantidad, unidad_medida as unidadMedida 
-                                       FROM ingredientes_recetas 
-                                       WHERE id_receta = ?");
-            $sentencia->execute([$idReceta]);
-            return $sentencia->fetchAll(PDO::FETCH_ASSOC);
-        } catch (PDOException $e) {
-            throw new Exception("Error al obtener ingredientes: " . $e->getMessage(), $e->getCode());
-        }
-    }
-
+	public static function ingredientesDeReceta($idReceta)
+	{
+		$bd = BD::obtener();
+		$sentencia = $bd->prepare("SELECT nombre, cantidad, unidad_medida as unidadmedida FROM ingredientes_recetas WHERE id_receta = ?");
+		$sentencia->execute([$idReceta]);
+		return $sentencia->fetchAll();
+	}
 
     public static function pasosDeReceta($idReceta)
-    {
-        $bd = BD::obtener();
-        try {
-            $sentencia = $bd->prepare("SELECT paso FROM pasos_recetas WHERE id_receta = ?");
-            $sentencia->execute([$idReceta]);
-            return $sentencia->fetchAll(PDO::FETCH_ASSOC);
-        } catch (PDOException $e) {
-            throw new Exception("Error al obtener pasos: " . $e->getMessage(), $e->getCode());
-        }
-    }
+	{
+		$bd = BD::obtener();
+		$sentencia = $bd->prepare("SELECT paso FROM pasos_recetas WHERE id_receta = ?");
+		$sentencia->execute([$idReceta]);
+		return $sentencia->fetchAll();
+	}
 
     private static function eliminarPasosDeReceta($idReceta)
     {
@@ -244,16 +185,27 @@ class Recetas
     }
 
     public static function obtener()
-{
-    $bd = BD::obtener();
-    try {
-        $sentencia = $bd->query("SELECT * FROM recetas");
-        return $sentencia->fetchAll();
-    } catch (PDOException $e) {
-        throw new Exception("Error al obtener recetas: " . $e->getMessage(), $e->getCode());
+    {
+        $bd = BD::obtener();
+        try {
+            $sentencia = $bd->query("SELECT * FROM recetas");
+            return $sentencia->fetchAll();
+        } catch (PDOException $e) {
+            throw new Exception("Error al obtener recetas: " . $e->getMessage(), $e->getCode());
+        }
     }
+
+    public static function obtenerPorId($idReceta)
+	{
+		$bd = BD::obtener();
+		$sentencia = $bd->prepare("SELECT recetas.id, recetas.nombre, recetas.descripcion, recetas.porciones, fotos_recetas.foto FROM recetas INNER JOIN fotos_recetas ON recetas.id = fotos_recetas.id_receta WHERE recetas.id = ?");
+		$sentencia->execute([$idReceta]);
+		$receta = $sentencia->fetchObject();
+		if (!$receta) {
+			return null;
+		}
+		$receta->ingredientes = self::ingredientesDeReceta($receta->id);
+		$receta->pasos = self::pasosDeReceta($receta->id);
+		return $receta;
+	}
 }
-
-}
-
-

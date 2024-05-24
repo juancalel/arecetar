@@ -49,7 +49,7 @@
           <thead>
             <tr>
               <td>Cantidad</td>
-              <td>Unidad medida</td>
+              <td>Unidad Medida</td>
               <td>Ingrediente</td>
               <td></td>
               <td></td>
@@ -67,7 +67,7 @@
               </td>
               <td>
                 <b-field>
-                  <b-select v-model="ingrediente.unidadMedida">
+                  <b-select v-model="ingrediente.unidadmedida">
                     <option
                       v-for="(unidad, claveUnidad) in unidadesMedida"
                       :value="unidad"
@@ -213,7 +213,7 @@ export default {
       this.receta.ingredientes.push({
         nombre: "",
         cantidad: 1,
-        unidadMedida: this.unidadesMedida[0],
+        unidadmedida: this.unidadesMedida[0],
       });
     },
     puedeMostrarBotonEliminarIngrediente() {
@@ -230,7 +230,7 @@ export default {
       return (
         ultimoIngrediente.nombre &&
         ultimoIngrediente.cantidad &&
-        ultimoIngrediente.unidadMedida
+        ultimoIngrediente.unidadmedida
       );
     },
     puedeMostrarBotonAgregarIngrediente(indice_ingrediente) {

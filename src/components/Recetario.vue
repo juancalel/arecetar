@@ -23,31 +23,30 @@
       >
         <tarjeta-receta :receta="receta"></tarjeta-receta>
       </div>
+      <div class="column" v-if="recetas.length === 0 && !cargando">
+        <p>No se encontraron recetas.</p>
+      </div>
     </div>
   </div>
 </template>
+
 <script>
 import RecetasService from "../services/RecetasService";
 import TarjetaReceta from "./TarjetaReceta.vue";
 import Utiles from "../services/Utiles";
+
 export default {
   components: { TarjetaReceta },
-  data: () => ({
-    recetas: [],
-    cargando: false,
-    busqueda: "",
-  }),
+  data() {
+    return {
+      recetas: [],
+      cargando: false,
+      busqueda: "",
+    };
+  },
   async mounted() {
     await this.obtenerRecetas();
-    this.buscar = Utiles.debounce(async () => {
-      if (!this.busqueda) {
-        await this.cancelarBusqueda();
-        return;
-      }
-      this.cargando = true;
-      this.recetas = await RecetasService.buscarRecetas(this.busqueda);
-      this.cargando = false;
-    }, 500);
+    this.buscar = Utiles.debounce(this.buscarRecetas, 500);
   },
   methods: {
     async cancelarBusqueda() {
@@ -56,9 +55,34 @@ export default {
       await this.obtenerRecetas();
     },
     async obtenerRecetas() {
-      this.cargando = true;
-      this.recetas = await RecetasService.obtenerRecetas();
-      this.cargando = false;
+      try {
+        this.cargando = true;
+        this.recetas = await RecetasService.obtenerRecetas();
+      } catch (error) {
+        this.$buefy.toast.open({
+          message: "Error al obtener recetas",
+          type: "is-danger",
+        });
+      } finally {
+        this.cargando = false;
+      }
+    },
+    async buscarRecetas() {
+      if (!this.busqueda) {
+        await this.cancelarBusqueda();
+        return;
+      }
+      try {
+        this.cargando = true;
+        this.recetas = await RecetasService.buscarRecetas(this.busqueda);
+      } catch (error) {
+        this.$buefy.toast.open({
+          message: "Error al buscar recetas",
+          type: "is-danger",
+        });
+      } finally {
+        this.cargando = false;
+      }
     },
   },
 };

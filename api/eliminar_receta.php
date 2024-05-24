@@ -1,57 +1,33 @@
 <?php
-/*
-
-  ____          _____               _ _           _       
- |  _ \        |  __ \             (_) |         | |      
- | |_) |_   _  | |__) |_ _ _ __ _____| |__  _   _| |_ ___ 
- |  _ <| | | | |  ___/ _` | '__|_  / | '_ \| | | | __/ _ \
- | |_) | |_| | | |  | (_| | |   / /| | |_) | |_| | ||  __/
- |____/ \__, | |_|   \__,_|_|  /___|_|_.__/ \__, |\__\___|
-         __/ |                               __/ |        
-        |___/                               |___/         
-    
-____________________________________
-/ Si necesitas ayuda, contáctame en \
-\ https://parzibyte.me               /
- ------------------------------------
-        \   ^__^
-         \  (oo)\_______
-            (__)\       )\/\
-                ||----w |
-                ||     ||
-Creado por Parzibyte (https://parzibyte.me).
-------------------------------------------------------------------------------------------------
-            | IMPORTANTE |
-Si vas a borrar este encabezado, considera:
-Seguirme: https://parzibyte.me/blog/sigueme/
-Y compartir mi blog con tus amigos
-También tengo canal de YouTube: https://www.youtube.com/channel/UCroP4BTWjfM0CkGB6AFUoBg?sub_confirmation=1
-Twitter: https://twitter.com/parzibyte
-Facebook: https://facebook.com/parzibyte.fanpage
-Instagram: https://instagram.com/parzibyte
-Hacer una donación vía PayPal: https://paypal.me/LuisCabreraBenito
-------------------------------------------------------------------------------------------------
-*/ ?>
-<?php
 include_once "cors.php";
 
 try {
-  // Retrieve recipe ID from JSON input
-  $idReceta = json_decode(file_get_contents("php://input"), true);
-  if (!$idReceta) {
-    throw new Exception("Invalid JSON data: " . json_last_error_msg());
-  }
+    // Leer el ID de receta desde la entrada JSON
+    $entradaJSON = file_get_contents("php://input");
+    $idReceta = json_decode($entradaJSON, true);
 
-  // Validate recipe ID
-  if (!is_numeric($idReceta)) {
-    throw new Exception("Recipe ID must be a number.");
-  }
+    // Verificar si la decodificación JSON fue exitosa
+    if ($idReceta === null && json_last_error() !== JSON_ERROR_NONE) {
+        throw new Exception("Datos JSON inválidos: " . json_last_error_msg());
+    }
 
-  // Call Recetas::eliminar() to delete recipe
-  $respuesta = Parzibyte\Recetas::eliminar($idReceta);
+    // Validar el ID de receta
+    if (!isset($idReceta) || !is_numeric($idReceta)) {
+        throw new Exception("El ID de receta debe ser un número.");
+    }
+
+    // Llamar a Recetas::eliminar() para eliminar la receta
+    $respuesta = Parzibyte\Recetas::eliminar($idReceta);
+
+    // Verificar si la eliminación fue exitosa
+    if ($respuesta) {
+        $respuesta = ["success" => true, "message" => "Receta eliminada correctamente"];
+    } else {
+        throw new Exception("Error al eliminar la receta.");
+    }
 } catch (Exception $e) {
-  $error = $e->getMessage();
-  $respuesta = ["error" => $error];
+    $respuesta = ["error" => $e->getMessage()];
 }
 
+header('Content-Type: application/json');
 echo json_encode($respuesta);

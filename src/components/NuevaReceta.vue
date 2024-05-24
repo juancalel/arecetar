@@ -256,19 +256,20 @@ export default {
       }
     },
     async guardarReceta() {
-      this.cargando = true;
-      const respuesta = await RecetasService.agregarReceta(
-        this.receta,
-        this.foto
-      );
-      if (respuesta) {
-        this.$buefy.toast.open("Receta guardada");
-        this.limpiarFormulario();
-      } else {
-        this.$buefy.toast.open("Error guardando receta");
-      }
-      this.cargando = false;
-    },
+  this.cargando = true;
+  console.log("Receta a enviar:", this.receta); // Agregar esta línea para imprimir la receta antes de enviarla
+  const respuesta = await RecetasService.agregarReceta(
+    this.receta,
+    this.foto
+  );
+  if (respuesta) {
+    this.$buefy.toast.open("Receta guardada");
+    this.limpiarFormulario();
+  } else {
+    this.$buefy.toast.open("Error guardando receta");
+  }
+  this.cargando = false;
+},
   },
   async mounted() {
     this.limpiarFormulario();
