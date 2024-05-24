@@ -95,11 +95,11 @@ export default {
       this.imprimiendo = false;
     },
     nombreIngrediente(ingrediente) {
-      if (ingrediente.unidadMedida === Constantes.AL_GUSTO) {
+      if (ingrediente.unidadmedida === Constantes.AL_GUSTO) {
         return `${ingrediente.nombre} ${Constantes.AL_GUSTO}`;
       } else {
         const cantidad = this.cantidadIngrediente(ingrediente.cantidad);
-        return `${cantidad} ${ingrediente.unidadMedida}(s) de ${ingrediente.nombre}`;
+        return `${cantidad} ${ingrediente.unidadmedida}(s) de ${ingrediente.nombre}`;
       }
     },
     cantidadIngrediente(cantidad) {

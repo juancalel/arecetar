@@ -24,6 +24,9 @@ const RecetasService = {
 	async obtenerRecetas() {
 		return await HttpService.get("/obtener_recetas.php");
 	},
+	async obtenerRecetaFoto() {
+		return await HttpService.get("/obtener_receta_foto.php");
+	},
 	async eliminarReceta(id) {
 		return await HttpService.post("/eliminar_receta.php", id);
 	},

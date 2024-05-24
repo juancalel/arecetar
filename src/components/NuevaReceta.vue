@@ -203,7 +203,7 @@ export default {
       this.receta.ingredientes.push({
         nombre: "",
         cantidad: 1,
-        unidadMedida: this.unidadesMedida[0],
+        unidadmedida: this.unidadesMedida[0],
       });
     },
     puedeMostrarBotonEliminarIngrediente() {

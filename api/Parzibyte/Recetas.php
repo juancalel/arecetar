@@ -195,6 +195,17 @@ class Recetas
         }
     }
 
+    public static function obtenerRecetaconFoto()
+    {
+        $bd = BD::obtener();
+        try {
+            $sentencia = $bd->query("SELECT recetas.id, recetas.nombre, recetas.descripcion, recetas.porciones, fotos_recetas.foto FROM recetas INNER JOIN fotos_recetas ON recetas.id = fotos_recetas.id_receta");
+            return $sentencia->fetchAll();
+        } catch (PDOException $e) {
+            throw new Exception("Error al obtener recetas: " . $e->getMessage(), $e->getCode());
+        }
+    }
+
     public static function obtenerPorId($idReceta)
 	{
 		$bd = BD::obtener();
